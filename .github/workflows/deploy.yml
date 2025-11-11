@@ -26,14 +26,11 @@ jobs:
           sudo apt-get update
           sudo apt-get install -y sshpass
 
-      # Nếu muốn cache node_modules cho nhanh hơn (optional)
-      # - name: Cache node_modules
-      #   uses: actions/cache@v4
-      #   with:
-      #     path: node_modules
-      #     key: ${{ runner.os }}-node-${{ hashFiles('package-lock.json') }}
-      #     restore-keys: |
-      #       ${{ runner.os }}-node-
+      - name: Install deps
+        run: npm ci
+
+      - name: Build
+        run: npm run build
 
       - name: Run Makefile release (install + build + deploy + nginx restart)
         run: |

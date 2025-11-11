@@ -20,7 +20,7 @@ function Signup() {
 
   return (
     <div>
-      <h1>Đăng Ký Tài Khoản</h1>
+      <h1>Test</h1>
       <form onSubmit={handleSubmit}>
         <div>
           <label>Tên:</label>

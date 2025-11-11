@@ -1,7 +1,11 @@
 PKG_MGR = npm
 
-SSH = sshpass -p $(DEPLOY_PASS) ssh -p $(SSH_PORT) -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null $(SSH_USER)@$(SSH_HOST)
-SCP = sshpass -p $(DEPLOY_PASS) scp -P $(SSH_PORT)
+SSH = sshpass -p $(DEPLOY_PASS) ssh -p $(SSH_PORT) \
+      -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null \
+      $(SSH_USER)@$(SSH_HOST)
+
+SCP = sshpass -p $(DEPLOY_PASS) scp -P $(SSH_PORT) \
+      -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null
 
 .PHONY: release install build deploy nginx-reload nginx-restart clean print
 

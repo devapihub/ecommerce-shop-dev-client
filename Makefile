@@ -9,24 +9,10 @@ release: install build deploy nginx-restart
 	@echo "✅ Done -> $(SSH_USER)@$(SSH_HOST):$(REMOTE_DIR)"
 
 install:
-ifeq ($(PKG_MGR),npm)
-	@npm ci || npm install
-else ifeq ($(PKG_MGR),yarn)
-	@yarn install --frozen-lockfile || yarn install
-else ifeq ($(PKG_MGR),pnpm)
-	@pnpm i --frozen-lockfile || pnpm i
-else
-	$(error PKG_MGR must be npm|yarn|pnpm)
-endif
+	@npm npm install
 
 build:
-ifeq ($(PKG_MGR),npm)
 	@npm run build
-else ifeq ($(PKG_MGR),yarn)
-	@yarn build
-else ifeq ($(PKG_MGR),pnpm)
-	@pnpm run build
-endif
 	@test -d build || (echo "❌ Không thấy build/ sau build"; exit 1)
 
 deploy:
@@ -41,7 +27,7 @@ nginx-restart:
 	@$(SSH) "sudo nginx -t && sudo systemctl restart nginx || (sudo systemctl status nginx --no-pager; exit 1)"
 
 clean:
-	@rm -rf dist
+	@rm -rf build
 
 print:
 	@echo "SERVER: $(SSH_USER)@$(SSH_HOST):$(SSH_PORT)"

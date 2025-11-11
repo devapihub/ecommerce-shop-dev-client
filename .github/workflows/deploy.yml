@@ -1,0 +1,46 @@
+name: Build & Deploy via Makefile
+
+on:
+  push:
+    branches:
+      - master
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+
+    env:
+      PKG_MGR: npm
+
+    steps:
+      - name: Checkout source
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - name: Install sshpass
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y sshpass
+
+      # Nếu muốn cache node_modules cho nhanh hơn (optional)
+      # - name: Cache node_modules
+      #   uses: actions/cache@v4
+      #   with:
+      #     path: node_modules
+      #     key: ${{ runner.os }}-node-${{ hashFiles('package-lock.json') }}
+      #     restore-keys: |
+      #       ${{ runner.os }}-node-
+
+      - name: Run Makefile release (install + build + deploy + nginx restart)
+        run: |
+          make release \
+            SSH_USER=${{ secrets.SSH_USER }} \
+            SSH_HOST=${{ secrets.SSH_HOST }} \
+            SSH_PORT=${{ secrets.SSH_PORT }} \
+            DEPLOY_PASS=${{ secrets.DEPLOY_PASS }} \
+            REMOTE_DIR=${{ secrets.REMOTE_DIR }}

@@ -9,7 +9,7 @@ release: install build deploy nginx-restart
 	@echo "✅ Done -> $(SSH_USER)@$(SSH_HOST):$(REMOTE_DIR)"
 
 install:
-	@npm npm install
+	@npm ci || npm install
 
 build:
 	@npm run build

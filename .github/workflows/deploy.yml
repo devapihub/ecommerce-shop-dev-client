@@ -26,9 +26,6 @@ jobs:
           sudo apt-get update
           sudo apt-get install -y sshpass
 
-      - name: Build
-        run: npm run build
-
       - name: Run Makefile release (install + build + deploy + nginx restart)
         run: |
           make release \

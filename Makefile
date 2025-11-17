@@ -13,7 +13,11 @@ release: install build deploy nginx-restart
 	@echo "✅ Done -> $(SSH_USER)@$(SSH_HOST):$(REMOTE_DIR)"
 
 install:
-	@npm ci || npm install
+	@echo " Clean installing dependencies..."
+	@rm -rf node_modules package-lock.json
+	@npm cache clean --force
+	@npm install --force
+	@echo " Dependencies installed"
 
 build:
 	@npm run build
@@ -31,7 +35,8 @@ nginx-restart:
 	@$(SSH) "sudo nginx -t && sudo systemctl restart nginx || (sudo systemctl status nginx --no-pager; exit 1)"
 
 clean:
-	@rm -rf build
+	@rm -rf build node_modules package-lock.json
+	@npm cache clean --force
 
 print:
 	@echo "SERVER: $(SSH_USER)@$(SSH_HOST):$(SSH_PORT)"

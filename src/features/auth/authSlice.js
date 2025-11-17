@@ -5,21 +5,52 @@ export const signupUser = createAsyncThunk(
   'auth/signup',
   async (formData, { rejectWithValue }) => {
     try {
-      const response = await fetch(`${process.env.REACT_APP_API_URL}/shop/signup`, {
+      const response = await fetch(`${import.meta.env.VITE_API_URL}/shop/signup`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'x-api-key': process.env.REACT_APP_API_KEY
+          'x-api-key': import.meta.env.VITE_API_KEY
+        },
+        body: JSON.stringify(formData)
+      });
+
+      // sesssion
+      // token
+      
+      const data = await response.json();
+      localStorage.setItem('refreshToken', data.metadata?.tokens?.refreshToken || '');
+      localStorage.setItem('accessToken', data.metadata?.tokens?.accessToken || '');
+      if (data.status === 201 || response.status === 201) {
+        return data;
+      } else {
+        return rejectWithValue(data.message || 'Đăng ký thất bại');
+      }
+    } catch (error) {
+      return rejectWithValue('Lỗi kết nối: ' + error.message);
+    }
+  }
+);
+
+// Async thunk cho login
+export const loginUser = createAsyncThunk(
+  'auth/login',
+  async (formData, { rejectWithValue }) => {
+    try {
+      const response = await fetch(`${import.meta.env.VITE_API_URL}/shop/login`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'x-api-key': import.meta.env.VITE_API_KEY
         },
         body: JSON.stringify(formData)
       });
 
       const data = await response.json();
 
-      if (data.code === 201) {
+      if (data.status === 200 || response.status === 200) {
         return data;
       } else {
-        return rejectWithValue(data.message || 'Đăng ký thất bại');
+        return rejectWithValue(data.message || 'Đăng nhập thất bại');
       }
     } catch (error) {
       return rejectWithValue('Lỗi kết nối: ' + error.message);
@@ -86,6 +117,26 @@ const authSlice = createSlice({
         };
       })
       .addCase(signupUser.rejected, (state, action) => {
+        state.loading = false;
+        state.isLoading = false;
+        state.error = action.payload;
+        state.message = action.payload;
+      })
+      .addCase(loginUser.pending, (state) => {
+        state.loading = true;
+        state.isLoading = true;
+        state.message = '';
+        state.error = null;
+      })
+      .addCase(loginUser.fulfilled, (state, action) => {
+        state.loading = false;
+        state.isLoading = false;
+        state.message = 'Đăng nhập thành công!';
+        state.user = action.payload.metadata?.shop || null;
+        state.tokens = action.payload.metadata?.tokens || null;
+        state.isAuthenticated = !!state.tokens;
+      })
+      .addCase(loginUser.rejected, (state, action) => {
         state.loading = false;
         state.isLoading = false;
         state.error = action.payload;

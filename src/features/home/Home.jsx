@@ -1,7 +1,20 @@
-import { useSelector } from 'react-redux'
+import { useSelector, useDispatch } from 'react-redux'
+import { logoutUser } from '../auth/authSlice'
+import { useNavigate } from 'react-router-dom'
 
 const Home = () => {
-  const { user, isAuthenticated } = useSelector((state) => state.auth)
+  const { user, isAuthenticated, loading } = useSelector((state) => state.auth)
+  const dispatch = useDispatch()
+  const navigate = useNavigate()
+
+  const handleLogout = async () => {
+    try {
+      await dispatch(logoutUser()).unwrap()
+      navigate('/auth')
+    } catch (error) {
+      navigate('/auth')
+    }
+  }
 
   return (
     <div className="min-h-screen bg-gray-50 py-8">
@@ -19,6 +32,13 @@ const Home = () => {
               <p className="text-sm text-gray-500 mt-2">
                 Bạn đã đăng nhập thành công.
               </p>
+              <button
+                onClick={handleLogout}
+                disabled={loading}
+                className="mt-4 px-6 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors"
+              >
+                {loading ? 'Đang đăng xuất...' : 'Đăng xuất'}
+              </button>
             </div>
           )}
 

@@ -3,10 +3,10 @@ import { Navigate, useLocation } from 'react-router-dom';
 import { useSelector } from 'react-redux';
 
 function ProtectedRoute({ children, allowedRoles, redirectTo = '/' }) {
-  const { isAuthenticated, isLoading, user } = useSelector((state) => state.auth);
+  const { isAuthenticated, loading, user } = useSelector((state) => state.auth);
   const location = useLocation();
   
-  if (isLoading) {
+  if (loading) {
     return <div>Loading...</div>;
   }
 

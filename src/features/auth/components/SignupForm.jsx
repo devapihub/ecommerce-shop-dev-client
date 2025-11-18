@@ -1,11 +1,13 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useDispatch, useSelector } from "react-redux";
+import { useNavigate } from "react-router-dom";
 import { signupUser } from "../authSlice";
 import SocialLoginButtons from "../../../shared/components/client/common/SocialLoginButtons";
 
 function SignupForm({ switchToLogin }) {
   const dispatch = useDispatch();
-  const { loading, error, message } = useSelector((state) => state.auth);
+  const navigate = useNavigate();
+  const { loading, error, message, isAuthenticated } = useSelector((state) => state.auth);
 
   const [formData, setFormData] = useState({
     name: "",
@@ -22,8 +24,14 @@ function SignupForm({ switchToLogin }) {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    await dispatch(signupUser(formData));
+    dispatch(signupUser(formData));
   };
+
+  useEffect(() => {
+    if (isAuthenticated) {
+      navigate('/', { replace: true });
+    }
+  }, [isAuthenticated, navigate]);
 
   return (
     <div className="absolute top-1/2 right-[100px] -translate-y-1/2 bg-white rounded-2xl shadow-xl p-6 w-[360px] border border-black/10">

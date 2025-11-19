@@ -1,5 +1,7 @@
-import { Search, Menu, User, ShoppingCart } from 'lucide-react'
+import { Search, Menu, User, ShoppingCart, LogIn } from 'lucide-react'
 import { useState } from 'react'
+import { useNavigate } from 'react-router-dom'
+import { useSelector } from 'react-redux'
 
 const TRENDING_KEYWORDS = [
   'iphone 17',
@@ -14,6 +16,8 @@ const TRENDING_KEYWORDS = [
 
 const Header = () => {
   const [searchQuery, setSearchQuery] = useState('')
+  const navigate = useNavigate()
+  const { isAuthenticated } = useSelector((state) => state.auth)
 
   const handleSearchChange = (e) => {
     setSearchQuery(e.target.value)
@@ -21,19 +25,27 @@ const Header = () => {
 
   const handleSearch = (e) => {
     e.preventDefault()
+    if (searchQuery.trim()) {
+      navigate(`/products?keySearch=${encodeURIComponent(searchQuery.trim())}`)
+    } else {
+      navigate('/products')
+    }
   }
 
   return (
     <header className="w-full sticky top-0 z-50">
-      <div className="bg-fpt w-full pt-4 pb-3">
+      <div className="bg-fpt w-full pt-3 pb-2">
         <div className="max-w-[1200px] mx-auto px-4">
           <div className="flex items-center gap-4">
             {/* Logo */}
-            <div className="flex items-center gap-3 flex-shrink-0">
+            <div 
+              className="flex items-center gap-3 flex-shrink-0 cursor-pointer"
+              onClick={() => navigate('/')}
+            >
               <img
                 src="https://upload.wikimedia.org/wikipedia/commons/thumb/1/11/FPT_logo_2010.svg/2560px-FPT_logo_2010.svg.png"
                 alt="FPT Shop Logo"
-                className="w-14 h-14 object-contain"
+                className="w-20 h-20 object-contain"
               />
             </div>
 
@@ -83,20 +95,37 @@ const Header = () => {
               {/* User icon */}
               <button
                 type="button"
+                onClick={() => {
+                  if (!isAuthenticated) {
+                    navigate('/auth')
+                  }
+                }}
                 className="w-10 h-10 rounded-full bg-[#a01d22] hover:bg-[#8a1a1e] flex items-center justify-center text-white transition-colors"
                 aria-label="User account"
               >
                 <User className="w-5 h-5" />
               </button>
 
-              {/* Cart button */}
-              <button
-                type="button"
-                className="bg-[#1a1a1a] hover:bg-[#2a2a2a] rounded-xl px-4 py-2 flex items-center gap-2 text-white text-sm font-medium transition-colors"
-              >
-                <ShoppingCart className="w-5 h-5" />
-                <span>Giỏ hàng</span>
-              </button>
+              {/* Cart button or Login button */}
+              {isAuthenticated ? (
+                <button
+                  type="button"
+                  onClick={() => navigate('/cart')}
+                  className="bg-[#1a1a1a] hover:bg-[#2a2a2a] rounded-xl px-4 py-2 flex items-center gap-2 text-white text-sm font-medium transition-colors"
+                >
+                  <ShoppingCart className="w-5 h-5" />
+                  <span>Giỏ hàng</span>
+                </button>
+              ) : (
+                <button
+                  type="button"
+                  onClick={() => navigate('/auth')}
+                  className="bg-[#1a1a1a] hover:bg-[#2a2a2a] rounded-xl px-4 py-2 flex items-center gap-2 text-white text-sm font-medium transition-colors"
+                >
+                  <LogIn className="w-5 h-5 font-bold" />
+                  <span>Đăng nhập</span>
+                </button>
+              )}
             </div>
           </div>
         </div>

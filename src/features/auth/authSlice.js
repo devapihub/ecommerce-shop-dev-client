@@ -84,6 +84,31 @@ export const logoutUser = createAsyncThunk(
   }
 );
 
+export const googleLogin = createAsyncThunk(
+  'auth/googleLogin',
+  async (token, { rejectWithValue }) => {
+    try {
+      const response = await axiosInstance.post('/shop/google', {
+        token,
+      });
+      
+      const data = response.data;
+      
+      if (data.status === 200) {
+        localStorage.setItem('refreshToken', data.metadata?.tokens?.refreshToken || '');
+        localStorage.setItem('accessToken', data.metadata?.tokens?.accessToken || '');
+        localStorage.setItem('userId', data.metadata?.shop?._id || '');
+        return data;
+      } else {
+        return rejectWithValue(data.message || 'Đăng nhập Google thất bại');
+      }
+    } catch (error) {
+      const errorMessage = error.response?.data?.message || error.message;
+      return rejectWithValue('Lỗi kết nối: ' + errorMessage);
+    }
+  }
+);
+
 const getInitialState = () => {
   const accessToken = localStorage.getItem('accessToken');
   const refreshToken = localStorage.getItem('refreshToken');
@@ -186,6 +211,23 @@ const authSlice = createSlice({
         state.user = null;
         state.tokens = null;
         state.isAuthenticated = false;
+      })
+      .addCase(googleLogin.pending, (state) => {
+        state.loading = true;
+        state.message = '';
+        state.error = null;
+      })
+      .addCase(googleLogin.fulfilled, (state, action) => {
+        state.loading = false;
+        state.message = 'Đăng nhập Google thành công!';
+        state.user = action.payload.metadata?.shop || null;
+        state.tokens = action.payload.metadata?.tokens || null;
+        state.isAuthenticated = !!state.tokens;
+      })
+      .addCase(googleLogin.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload;
+        state.message = action.payload;
       });
   }
 });

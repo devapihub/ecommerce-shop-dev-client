@@ -1,21 +1,16 @@
 import React, { useState } from 'react';
+import { useDispatch, useSelector } from 'react-redux';
 import { ArrowLeft } from 'lucide-react';
+import { forgotPassword } from '../authSlice';
 
 function ForgotPasswordForm({ switchToLogin }) {
+  const dispatch = useDispatch();
+  const { loading, message, error } = useSelector((state) => state.auth);
   const [email, setEmail] = useState('');
-  const [loading, setLoading] = useState(false);
-  const [message, setMessage] = useState('');
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    setLoading(true);
-    setMessage('');
-
-    // TODO: Implement forgot password API call
-    setTimeout(() => {
-      setMessage('Email khôi phục mật khẩu đã được gửi!');
-      setLoading(false);
-    }, 1000);
+    dispatch(forgotPassword(email));
   };
 
   return (
@@ -39,12 +34,19 @@ function ForgotPasswordForm({ switchToLogin }) {
           onChange={(e) => setEmail(e.target.value)}
           required
           className="w-full px-3 py-2.5 bg-white border border-gray-300 rounded-xl text-sm
-                     focus:ring-2 focus:ring-fpt focus:border-transparent
                      text-black outline-none transition-all"
         />
 
-        {message && (
-          <div className="text-green-600 text-sm">{message}</div>
+        {error && (
+          <div className="text-red-500 text-xs bg-red-50 p-2 rounded-lg">
+            {error}
+          </div>
+        )}
+
+        {message && !error && (
+          <div className="text-green-600 text-xs bg-green-50 p-2 rounded-lg">
+            {message}
+          </div>
         )}
 
         <button

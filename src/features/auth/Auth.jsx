@@ -3,12 +3,13 @@ import { useSearchParams, useNavigate } from "react-router-dom";
 import LoginForm from "./components/LoginForm";
 import SignupForm from "./components/SignupForm";
 import ForgotPasswordForm from "./components/ForgotPasswordForm";
+import ResetPasswordForm from "./components/ResetPasswordForm";
 
 function Auth() {
     const [searchParams] = useSearchParams();
     const navigate = useNavigate();
     const tab = searchParams.get('tab') || 'login';
-    const [currentForm, setCurrentForm] = useState(tab); // 'login', 'signup', 'forgot-password'
+    const [currentForm, setCurrentForm] = useState(tab); // 'login', 'signup', 'forgot-password', 'reset-password'
 
     // Sync URL với state khi tab thay đổi
     useEffect(() => {
@@ -49,6 +50,9 @@ function Auth() {
                 )}
                 {currentForm === 'forgot-password' && (
                     <ForgotPasswordForm switchToLogin={switchToLogin}/>
+                )}
+                {currentForm === 'reset-password' && (
+                    <ResetPasswordForm switchToLogin={switchToLogin}/>
                 )}
             </div>
         </div>

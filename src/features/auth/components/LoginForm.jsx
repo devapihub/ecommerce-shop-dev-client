@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { useNavigate } from 'react-router-dom';
 import { loginUser } from '../authSlice';
+import { Eye, EyeOff } from 'lucide-react';
 import SocialLoginButtons from '../../../shared/components/client/common/SocialLoginButtons';
 
 function LoginForm({ switchToSignup, switchToForgotPassword }) {
@@ -13,6 +14,7 @@ function LoginForm({ switchToSignup, switchToForgotPassword }) {
     email: '',
     password: ''
   });
+  const [showPassword, setShowPassword] = useState(false);
 
   const handleChange = (e) => {
     setFormData({
@@ -53,21 +55,28 @@ function LoginForm({ switchToSignup, switchToForgotPassword }) {
           onChange={handleChange}
           required
           className="w-full px-3 py-2.5 bg-white border border-gray-300 rounded-xl text-sm
-                     focus:ring-2 focus:ring-fpt focus:border-transparent 
                      text-black outline-none transition-all"
         />
 
-        <input
-          type="password"
-          name="password"
-          placeholder="Mật khẩu"
-          value={formData.password}
-          onChange={handleChange}
-          required
-          className="w-full px-3 py-2.5 bg-white border border-gray-300 rounded-xl text-sm
-                     focus:ring-2 focus:ring-fpt focus:border-transparent 
-                     text-black outline-none transition-all"
-        />
+        <div className="relative">
+          <input
+            type={showPassword ? "text" : "password"}
+            name="password"
+            placeholder="Mật khẩu"
+            value={formData.password}
+            onChange={handleChange}
+            required
+            className="w-full px-3 py-2.5 pr-10 bg-white border border-gray-300 rounded-xl text-sm
+                       text-black outline-none transition-all"
+          />
+          <button
+            type="button"
+            onClick={() => setShowPassword(!showPassword)}
+            className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700"
+          >
+            {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+          </button>
+        </div>
 
         {error && (
           <div className="text-red-600 text-sm">{error}</div>

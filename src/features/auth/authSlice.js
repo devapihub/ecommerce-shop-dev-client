@@ -1,20 +1,42 @@
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
 import axiosInstance from '../../utils/axiosInstance';
 
-export const signupUser = createAsyncThunk(
-  'auth/signup',
+export const sendOTP = createAsyncThunk(
+  'auth/sendOTP',
   async (formData, { rejectWithValue }) => {
     try {
-      const response = await axiosInstance.post('/shop/signup', formData);
+      const response = await axiosInstance.post('/shop/send-otp', formData);
       const data = response.data;
       
-      if (data.status === 201 ) {
-        localStorage.setItem('refreshToken', data.metadata?.tokens?.refreshToken || '');
-        localStorage.setItem('accessToken', data.metadata?.tokens?.accessToken || '');    
-        localStorage.setItem('userId', data.metadata?.shop?._id || '');
+      if (data.status === 200) {
         return data;
       } else {
-        return rejectWithValue(data.message || 'Đăng ký thất bại');
+        return rejectWithValue(data.message || 'Gửi OTP thất bại');
+      }
+    } catch (error) {
+      const errorMessage = error.response?.data?.message || error.message;
+      return rejectWithValue('Lỗi kết nối: ' + errorMessage);
+    }
+  }
+);
+
+export const verifyAndSignup = createAsyncThunk(
+  'auth/verifyAndSignup',
+  async ({ email, otpCode }, { rejectWithValue }) => {
+    try {
+      const response = await axiosInstance.post('/shop/verify-and-signup', {
+        email,
+        otpCode
+      });
+      const data = response.data;
+      
+      if (data.status === 201) {
+        localStorage.setItem('refreshToken', data.metadata?.tokens?.refreshToken);
+        localStorage.setItem('accessToken', data.metadata?.tokens?.accessToken);    
+        localStorage.setItem('userId', data.metadata?.user?._id);
+        return data;
+      } else {
+        return rejectWithValue(data.message || 'Xác thực OTP thất bại');
       }
     } catch (error) {
       const errorMessage = error.response?.data?.message || error.message;
@@ -33,9 +55,9 @@ export const loginUser = createAsyncThunk(
       console.log(data);
       
       if (data.status === 200) {
-        localStorage.setItem('refreshToken', data.metadata?.tokens?.refreshToken || '');
-        localStorage.setItem('accessToken', data.metadata?.tokens?.accessToken || '');      
-        localStorage.setItem('userId', data.metadata.shop._id);
+        localStorage.setItem('refreshToken', data.metadata?.tokens?.refreshToken);
+        localStorage.setItem('accessToken', data.metadata?.tokens?.accessToken);      
+        localStorage.setItem('userId', data.metadata?.user?._id);
         return data;
       } else {
         return rejectWithValue(data.message || 'Đăng nhập thất bại');
@@ -95,12 +117,53 @@ export const googleLogin = createAsyncThunk(
       const data = response.data;
       
       if (data.status === 200) {
-        localStorage.setItem('refreshToken', data.metadata?.tokens?.refreshToken || '');
-        localStorage.setItem('accessToken', data.metadata?.tokens?.accessToken || '');
-        localStorage.setItem('userId', data.metadata?.shop?._id || '');
+        localStorage.setItem('refreshToken', data.metadata?.tokens?.refreshToken);
+        localStorage.setItem('accessToken', data.metadata?.tokens?.accessToken);
+        localStorage.setItem('userId', data.metadata?.user?._id);
         return data;
       } else {
         return rejectWithValue(data.message || 'Đăng nhập Google thất bại');
+      }
+    } catch (error) {
+      const errorMessage = error.response?.data?.message || error.message;
+      return rejectWithValue('Lỗi kết nối: ' + errorMessage);
+    }
+  }
+);
+
+export const forgotPassword = createAsyncThunk(
+  'auth/forgotPassword',
+  async (email, { rejectWithValue }) => {
+    try {
+      const response = await axiosInstance.post('/shop/forgot-password', { email });
+      const data = response.data;
+      
+      if (data.status === 200) {
+        return data;
+      } else {
+        return rejectWithValue(data.message || 'Gửi email thất bại');
+      }
+    } catch (error) {
+      const errorMessage = error.response?.data?.message || error.message;
+      return rejectWithValue('Lỗi kết nối: ' + errorMessage);
+    }
+  }
+);
+
+export const resetPassword = createAsyncThunk(
+  'auth/resetPassword',
+  async ({ token, newPassword }, { rejectWithValue }) => {
+    try {
+      const response = await axiosInstance.post('/shop/reset-password', {
+        token,
+        newPassword
+      });
+      const data = response.data;
+      
+      if (data.status === 200) {
+        return data;
+      } else {
+        return rejectWithValue(data.message || 'Đặt lại mật khẩu thất bại');
       }
     } catch (error) {
       const errorMessage = error.response?.data?.message || error.message;
@@ -117,6 +180,8 @@ const getInitialState = () => {
   
   return {
     formData: { name: '', email: '', password: '' },
+    signupEmail: '', // Lưu email để dùng ở bước verify OTP
+    signupStep: 1, // 1: Nhập thông tin, 2: Nhập OTP
     loading: false,
     message: '',
     error: null,
@@ -130,7 +195,7 @@ const authSlice = createSlice({
   name: 'auth',
   initialState: getInitialState(),
   reducers: {
-    updateFormData: (state, action) => {
+    updateFormData: (state, action) => {      
       state.formData = {
         ...state.formData,
         [action.payload.name]: action.payload.value
@@ -142,6 +207,8 @@ const authSlice = createSlice({
         email: '',
         password: ''
       };
+      state.signupEmail = '';
+      state.signupStep = 1;
       state.message = '';
       state.error = null;
     },
@@ -152,15 +219,32 @@ const authSlice = createSlice({
   },
   extraReducers: (builder) => {
     builder
-      .addCase(signupUser.pending, (state) => {
+      // Send OTP
+      .addCase(sendOTP.pending, (state) => {
         state.loading = true;
         state.message = '';
         state.error = null;
       })
-      .addCase(signupUser.fulfilled, (state, action) => {
+      .addCase(sendOTP.fulfilled, (state, action) => {
+        state.loading = false;
+        state.message = action.payload.metadata?.message || 'OTP đã được gửi đến email của bạn!';
+        state.signupEmail = state.formData.email;
+        state.signupStep = 2; // Chuyển sang bước nhập OTP
+      })
+      .addCase(sendOTP.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload;
+        state.message = action.payload;
+      })
+      .addCase(verifyAndSignup.pending, (state) => {
+        state.loading = true;
+        state.message = '';
+        state.error = null;
+      })
+      .addCase(verifyAndSignup.fulfilled, (state, action) => {
         state.loading = false;
         state.message = 'Đăng ký thành công!';
-        state.user = action.payload.metadata?.shop || null;
+        state.user = action.payload.metadata?.user || null;
         state.tokens = action.payload.metadata?.tokens || null;
         state.isAuthenticated = !!state.tokens;
         state.formData = {
@@ -168,8 +252,10 @@ const authSlice = createSlice({
           email: '',
           password: ''
         };
+        state.signupEmail = '';
+        state.signupStep = 1;
       })
-      .addCase(signupUser.rejected, (state, action) => {
+      .addCase(verifyAndSignup.rejected, (state, action) => {
         state.loading = false;
         state.error = action.payload;
         state.message = action.payload;
@@ -225,6 +311,36 @@ const authSlice = createSlice({
         state.isAuthenticated = !!state.tokens;
       })
       .addCase(googleLogin.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload;
+        state.message = action.payload;
+      })
+      .addCase(forgotPassword.pending, (state) => {
+        state.loading = true;
+        state.message = '';
+        state.error = null;
+      })
+      .addCase(forgotPassword.fulfilled, (state, action) => {
+        state.loading = false;
+        state.message = action.payload.metadata?.message;
+        state.error = null;
+      })
+      .addCase(forgotPassword.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload;
+        state.message = action.payload;
+      })
+      .addCase(resetPassword.pending, (state) => {
+        state.loading = true;
+        state.message = '';
+        state.error = null;
+      })
+      .addCase(resetPassword.fulfilled, (state, action) => {
+        state.loading = false;
+        state.message = action.payload.metadata?.message;
+        state.error = null;
+      })
+      .addCase(resetPassword.rejected, (state, action) => {
         state.loading = false;
         state.error = action.payload;
         state.message = action.payload;

@@ -66,7 +66,7 @@ const Header = () => {
                   value={searchQuery}
                   onChange={handleSearchChange}
                   placeholder="Nhập tên điện thoại, laptop, phụ kiện... cần tìm"
-                  className="w-full py-3 pr-10 rounded-2xl text-xs px-5 text-gray-800 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-white"
+                  className="w-full py-3 pr-10 rounded-2xl text-xs px-5 text-gray-800 placeholder-gray-400 focus:outline-none"
                 />
                 <button
                   type="submit"

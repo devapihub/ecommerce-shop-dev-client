@@ -19,7 +19,7 @@ const SocialLoginButtons = () => {
   };
 
   const handleGoogleSuccess = async (credentialResponse) => {
-    const token = credentialResponse.credential;
+    const token = credentialResponse.credential;    
     await dispatch(googleLogin(token));
   };
 

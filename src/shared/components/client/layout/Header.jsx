@@ -1,7 +1,11 @@
-import { Search, Menu, User, ShoppingCart, LogIn } from 'lucide-react'
-import { useState } from 'react'
+import { Search, Menu, User, ShoppingCart, LogIn, Settings, LogOut,Store } from 'lucide-react'
+import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { useSelector } from 'react-redux'
+import { useSelector, useDispatch } from 'react-redux'
+import Tippy from '@tippyjs/react'
+import 'tippy.js/dist/tippy.css'
+import { logoutUser } from '../../../../features/auth/authSlice'
+import { getMyShop } from '../../../../features/shop/shopSlice'
 
 const TRENDING_KEYWORDS = [
   'iphone 17',
@@ -17,7 +21,27 @@ const TRENDING_KEYWORDS = [
 const Header = () => {
   const [searchQuery, setSearchQuery] = useState('')
   const navigate = useNavigate()
+  const dispatch = useDispatch()
   const { isAuthenticated } = useSelector((state) => state.auth)
+  const { shop, loading } = useSelector((state) => state.shop)
+
+  const handleLogout = async () => {
+    try {
+      await dispatch(logoutUser()).unwrap()
+      navigate('/')
+    } catch (error) {
+      console.error('Logout error:', error)
+    }
+  }
+
+  const handleShopClick = async () => {
+   await dispatch(getMyShop())
+    if (shop) {
+      navigate(`/shop/my-shop`)
+    } else {
+      navigate('/shop/create')
+    }
+  }
 
   const handleSearchChange = (e) => {
     setSearchQuery(e.target.value)
@@ -92,19 +116,64 @@ const Header = () => {
 
             {/* Right side - User and Cart */}
             <div className="flex items-center gap-3 flex-shrink-0">
-              {/* User icon */}
-              <button
-                type="button"
-                onClick={() => {
-                  if (!isAuthenticated) {
-                    navigate('/auth')
+              {/* User icon with Tippy dropdown */}
+              {isAuthenticated ? (
+                <Tippy
+                  content={
+                    <div className='font-medium'>
+                      <button
+                        onClick={() => {
+                          navigate('/account')
+                        }}
+                        className="block w-full text-left px-3 py-2 hover:bg-gray-100 hover:text-[#333333] rounded"
+                      >
+                        <div className="flex items-center gap-2">
+                          <Settings className="w-4 h-4" />
+                          <span>Tài khoản của tôi</span>
+                        </div>
+                      </button>
+                      <button
+                        onClick={handleShopClick}
+                        className="block w-full text-left px-3 py-2 hover:bg-gray-100 hover:text-[#333333] rounded"
+                      >
+                        <div className="flex items-center gap-2">
+                          <Store className="w-4 h-4" />
+                          <span>{shop ? 'Cửa hàng của tôi' : 'Bắt đầu bán hàng ngay!'}</span>
+                        </div>
+                      </button>
+                      <button
+                        onClick={handleLogout}
+                        className="block w-full text-left px-3 py-2 hover:bg-gray-100 rounded text-red-600 "
+                      >
+                        <div className="flex items-center gap-2">
+                          <LogOut className="w-4 h-4" />
+                          <span>Đăng xuất</span>
+                        </div>
+                      </button>
+                    </div>
                   }
-                }}
-                className="w-10 h-10 rounded-full bg-[#a01d22] hover:bg-[#8a1a1e] flex items-center justify-center text-white transition-colors"
-                aria-label="User account"
-              >
-                <User className="w-5 h-5" />
-              </button>
+                  interactive={true}
+                  placement="bottom-end"
+                  trigger="mouseenter focus"
+                >
+                  <button
+                    type="button"
+                    className="w-10 h-10 rounded-full bg-[#a01d22] hover:bg-[#8a1a1e] flex items-center justify-center text-white transition-colors"
+                    aria-label="User account"
+                  >
+                    <User className="w-5 h-5" />
+                  </button>
+                </Tippy>
+              ) : (
+                <button
+                  type="button"
+                  onClick={() => navigate('/auth')}
+                  className="w-10 h-10 rounded-full bg-[#a01d22] hover:bg-[#8a1a1e] flex items-center justify-center text-white transition-colors"
+                  aria-label="User account"
+                >
+                  <User className="w-5 h-5" />
+                </button>
+              )}
 
               {/* Cart button or Login button */}
               {isAuthenticated ? (

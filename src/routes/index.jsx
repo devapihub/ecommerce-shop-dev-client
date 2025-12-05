@@ -1,10 +1,10 @@
 import React from 'react';
 import { Routes, Route, Navigate } from 'react-router-dom';
 import ClientLayout from '../shared/components/client/layout/ClientLayout';
-import AdminLayout from '../shared/components/admin/layout/AdminLayout';
+import ShopLayout from '../shared/components/shop/layout/ShopLayout';
 import PublicRoutes from './PublicRoutes';
 import ClientRoutes from './client/ClientRoutes';
-import AdminRoutes from './admin/AdminRoutes';
+import ShopRoutes from './shop/ShopRoutes';
 import ProtectedRoute from './ProtectedRoute';
 
 const AppRoutes = () => {
@@ -39,15 +39,15 @@ const AppRoutes = () => {
         })}
       </Route>
 
-      {/* Admin routes - sử dụng AdminLayout và yêu cầu quyền admin */}
+      {/* Shop routes - sử dụng ShopLayout và yêu cầu có shop */}
       <Route
         element={
-          <ProtectedRoute allowedRoles="admin">
-            <AdminLayout />
+          <ProtectedRoute requiresShop={true}>
+            <ShopLayout />
           </ProtectedRoute>
         }
       >
-        {AdminRoutes.map((route) => {
+        {ShopRoutes.map((route) => {
           const Page = route.component;
           return (
             <Route
